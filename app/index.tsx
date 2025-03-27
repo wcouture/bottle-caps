@@ -1,17 +1,35 @@
 import { Button, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { PieChart, pieDataItem } from "react-native-gifted-charts";
 import { screenOptionsFactory } from "expo-router/build/useScreens";
-
-const data = [
-  { value: 80, color: "#ff5252" },
-  { value: 60, color: "#52aeff" },
-  { value: 90, color: "#ffdc52" },
-  { value: 40, color: "#57d945" },
-];
+import { Category } from "@/db/schema";
+import { useSQLiteContext } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import * as schema from "@/db/schema";
 
 export default function Index() {
+  const [budgetUsed, setBudget] = useState(1500);
+
+  const chartData = [
+    { value: 1, text: "food" },
+    { value: 2, text: "rent" },
+    { value: 3, text: "utilities" },
+  ];
+
+  const [data, setData] = useState<Category[]>([]);
+
+  const db = useSQLiteContext();
+  const drizzleDb = drizzle(db, { schema });
+
+  useEffect(() => {
+    const load = async () => {
+      const data = await drizzleDb.query.categories.findMany();
+      setData(data);
+    };
+    load();
+  });
+
   return (
     <View
       style={{
@@ -30,7 +48,7 @@ export default function Index() {
       >
         Available Budget
       </Text>
-      <Text style={PieChartStyle.available_label}>$ 1594 / 2500</Text>
+      <Text style={PieChartStyle.available_label}>$ {budgetUsed} / 2500</Text>
       <View>
         <PieChart
           donut
@@ -46,7 +64,7 @@ export default function Index() {
           textBackgroundColor="gray"
           labelsPosition="onBorder"
           showTextBackground={true}
-          data={data}
+          data={chartData}
           onPress={(item: pieDataItem, index: number) => {
             router.push({
               pathname: "/details",
@@ -54,6 +72,11 @@ export default function Index() {
             });
           }}
         ></PieChart>
+        {data.map((item) => (
+          <Text key={item.id}>
+            {item.name} : {item.limit}
+          </Text>
+        ))}
       </View>
     </View>
   );
