@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import { eq } from "drizzle-orm";
 
 export default function Details() {
-  const { index } = useLocalSearchParams();
+  const local_params = useLocalSearchParams();
+  const cat_name = local_params.text.toString();
 
   const [data, setData] = useState<Category[]>([]);
 
@@ -17,10 +18,10 @@ export default function Details() {
 
   useEffect(() => {
     const load = async () => {
-      const data = drizzleDb
+      const data = await drizzleDb
         .select()
         .from(categories)
-        .where(eq(categories.id, parseInt(index[0])))
+        .where(eq(categories.name, cat_name))
         .all();
       setData(data);
     };
@@ -37,7 +38,12 @@ export default function Details() {
       }}
     >
       <Text>Details Page.</Text>
-      <Text>ID: {index}</Text>
+      <Text>ID: {cat_name}</Text>
+      {data.map((item) => (
+        <Text key={item.id}>
+          {item.id} - {item.name} : {item.limit}
+        </Text>
+      ))}
     </View>
   );
 }

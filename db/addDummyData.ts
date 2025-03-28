@@ -4,8 +4,9 @@ import { budget_entries, categories } from "./schema";
 
 export const addDummyData = async (db: ExpoSQLiteDatabase) => {
   const value = AsyncStorage.getItemSync("dbInitialized");
-
   if (value) return;
+
+  await db.delete(categories);
 
   console.log("Inserting entries");
 

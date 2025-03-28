@@ -7,28 +7,37 @@ import { Category } from "@/db/schema";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
+import { char } from "drizzle-orm/mysql-core";
 
 export default function Index() {
   const [budgetUsed, setBudget] = useState(1500);
+  const [pieData, setPieData] = useState<pieDataItem[]>([]);
 
-  const chartData = [
-    { value: 1, text: "food" },
-    { value: 2, text: "rent" },
-    { value: 3, text: "utilities" },
-  ];
+  const chartData: pieDataItem[] = [];
 
   const [data, setData] = useState<Category[]>([]);
 
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
 
+  const clear_db = async () => {
+    const data = await drizzleDb.delete(schema.categories);
+    setData([]);
+  };
+
   useEffect(() => {
     const load = async () => {
       const data = await drizzleDb.query.categories.findMany();
       setData(data);
+
+      for (let i = 0; i < data.length; i++) {
+        let item = { value: Math.random() * 100, text: data[i].name };
+        chartData.push(item);
+      }
+      setPieData(chartData);
     };
     load();
-  });
+  }, []);
 
   return (
     <View
@@ -64,17 +73,18 @@ export default function Index() {
           textBackgroundColor="gray"
           labelsPosition="onBorder"
           showTextBackground={true}
-          data={chartData}
+          data={pieData}
           onPress={(item: pieDataItem, index: number) => {
             router.push({
               pathname: "/details",
-              params: { index: index },
+              params: { text: item.text },
             });
           }}
         ></PieChart>
+        <Button title="Clear DB" onPress={clear_db} />
         {data.map((item) => (
           <Text key={item.id}>
-            {item.name} : {item.limit}
+            {item.id} - {item.name} : {item.limit}
           </Text>
         ))}
       </View>
