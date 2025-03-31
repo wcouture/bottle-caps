@@ -17,7 +17,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (success) {
-      addDummyData(db);
     }
   }, [success]);
 

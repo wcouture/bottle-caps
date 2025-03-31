@@ -8,13 +8,14 @@ import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
 import { char } from "drizzle-orm/mysql-core";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
   const [budgetUsed, setBudget] = useState(1500);
+
+  // Used to supply and update piechart
   const [pieData, setPieData] = useState<pieDataItem[]>([]);
-
-  const chartData: pieDataItem[] = [];
-
+  // Used to store retrieved data from database
   const [data, setData] = useState<Category[]>([]);
 
   const db = useSQLiteContext();
@@ -23,87 +24,91 @@ export default function Index() {
   const clear_db = async () => {
     const data = await drizzleDb.delete(schema.categories);
     setData([]);
+    setPieData;
+  };
+
+  const load_data = async () => {
+    const data = await drizzleDb.query.categories.findMany();
+    setData(data);
+
+    const chartData: pieDataItem[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      let item = { value: data[i].limit, text: data[i].name };
+      chartData.push(item);
+    }
+    setPieData(chartData);
   };
 
   useEffect(() => {
-    const load = async () => {
-      const data = await drizzleDb.query.categories.findMany();
-      setData(data);
-
-      for (let i = 0; i < data.length; i++) {
-        let item = { value: Math.random() * 100, text: data[i].name };
-        chartData.push(item);
-      }
-      setPieData(chartData);
-    };
-    load();
+    load_data();
   }, []);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "flex-start",
-        alignItems: "center",
-        padding: 50,
-      }}
-    >
-      <Text
+    <SafeAreaProvider>
+      <SafeAreaView
         style={{
-          textDecorationLine: "underline",
-          fontSize: 20,
-          fontFamily: "courier new",
+          flex: 1,
+          justifyContent: "flex-start",
+          alignItems: "center",
+          padding: 50,
         }}
       >
-        Available Budget
-      </Text>
-      <Text style={PieChartStyle.available_label}>$ {budgetUsed} / 2500</Text>
-      <View>
-        <PieChart
-          donut
-          strokeWidth={5}
-          strokeColor="black"
-          innerCircleBorderWidth={5}
-          innerCircleBorderColor={"black"}
-          showValuesAsLabels={true}
-          showText
-          textSize={18}
-          textBackgroundRadius={22}
-          textColor="white"
-          textBackgroundColor="gray"
-          labelsPosition="onBorder"
-          showTextBackground={true}
-          data={pieData}
-          onPress={(item: pieDataItem, index: number) => {
+        <Text
+          style={{
+            textDecorationLine: "underline",
+            fontSize: 20,
+            fontFamily: "courier new",
+          }}
+        >
+          Available Budget
+        </Text>
+        <Text style={PieChartStyle.available_label}>$ {budgetUsed} / 2500</Text>
+        <View style={PieChartStyle.piechart}>
+          <PieChart
+            donut
+            strokeWidth={5}
+            strokeColor="black"
+            innerCircleBorderWidth={5}
+            innerCircleBorderColor={"black"}
+            showValuesAsLabels={true}
+            showText
+            textSize={14}
+            textBackgroundRadius={22}
+            textColor="black"
+            labelsPosition="outward"
+            data={pieData}
+            onPress={(item: pieDataItem, index: number) => {
+              router.push({
+                pathname: "/details",
+                params: { text: item.text },
+              });
+            }}
+          ></PieChart>
+        </View>
+        <Button
+          title="Add Category"
+          onPress={() => {
             router.push({
-              pathname: "/details",
-              params: { text: item.text },
+              pathname: "/add-category",
             });
           }}
-        ></PieChart>
+        />
         <Button title="Clear DB" onPress={clear_db} />
-        {data.map((item) => (
-          <Text key={item.id}>
-            {item.id} - {item.name} : {item.limit}
-          </Text>
-        ))}
-      </View>
-    </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const PieChartStyle = StyleSheet.create({
   piechart: {
-    marginVertical: 100,
-    marginHorizontal: 30,
-    borderRadius: 10,
-    paddingVertical: 50,
-    backgroundColor: "#414141",
-    justifyContent: "center",
-    alignItems: "center",
+    marginBottom: 100,
   },
   available_label: {
     paddingTop: 20,
     paddingBottom: 50,
   },
+
+  clear_button: {},
+  add_category: { padding: 10, borderWidth: 2, color: "#000" },
 });
