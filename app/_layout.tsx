@@ -29,8 +29,22 @@ export default function RootLayout() {
       >
         <ThemeProvider value={DefaultTheme}>
           <Stack>
-            <Stack.Screen name="index"></Stack.Screen>
-            <Stack.Screen name="details"></Stack.Screen>
+            <Stack.Screen
+              name="index"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="details"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="add-expense"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
+            <Stack.Screen
+              name="add-period"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
           </Stack>
         </ThemeProvider>
       </SQLiteProvider>

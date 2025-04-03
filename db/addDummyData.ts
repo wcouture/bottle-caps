@@ -10,9 +10,9 @@ export const addDummyData = async (db: ExpoSQLiteDatabase) => {
 
   console.log("Inserting entries");
 
-  await db.insert(categories).values([
-    { name: "Food", limit: 100 },
-    { name: "Rent", limit: 100 },
-    { name: "Utilities", limit: 100 },
-  ]);
+  // await db.insert(categories).values([
+  //   { name: "Food", limit: 100 },
+  //   { name: "Rent", limit: 100 },
+  //   { name: "Utilities", limit: 100 },
+  // ]);
 };

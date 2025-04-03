@@ -13,6 +13,8 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 export default function Index() {
   const [budgetUsed, setBudget] = useState(1500);
 
+  const [entries, setEntries] = useState<schema.BudgetEntry[]>([]);
+
   // Used to supply and update piechart
   const [pieData, setPieData] = useState<pieDataItem[]>([]);
   // Used to store retrieved data from database
@@ -23,6 +25,8 @@ export default function Index() {
 
   const clear_db = async () => {
     const data = await drizzleDb.delete(schema.categories);
+    await drizzleDb.delete(schema.budget_entries);
+    await drizzleDb.delete(schema.periods);
     setData([]);
     setPieData;
   };
@@ -58,7 +62,6 @@ export default function Index() {
           style={{
             textDecorationLine: "underline",
             fontSize: 20,
-            fontFamily: "courier new",
           }}
         >
           Available Budget
@@ -81,7 +84,7 @@ export default function Index() {
             onPress={(item: pieDataItem, index: number) => {
               router.push({
                 pathname: "/details",
-                params: { text: item.text },
+                params: { id: data[index].id },
               });
             }}
           ></PieChart>
@@ -91,6 +94,22 @@ export default function Index() {
           onPress={() => {
             router.push({
               pathname: "/add-category",
+            });
+          }}
+        />
+        <Button
+          title="Add Expense"
+          onPress={() => {
+            router.push({
+              pathname: "/add-expense",
+            });
+          }}
+        />
+        <Button
+          title="Add Period"
+          onPress={() => {
+            router.push({
+              pathname: "/add-period",
             });
           }}
         />

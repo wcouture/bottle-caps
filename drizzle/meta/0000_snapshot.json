@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4562a6ce-2cc9-463c-98ca-4a6b8ab4cccc",
+  "id": "97e629c7-4105-4fac-905b-6a81e39892dd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "budget_entries": {
@@ -17,6 +17,13 @@
         "value": {
           "name": "value",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

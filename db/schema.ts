@@ -14,6 +14,7 @@ export const categories = sqliteTable("categories", {
 export const budget_entries = sqliteTable("budget_entries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   value: integer("value").notNull(),
+  label: text("label").notNull(),
   category_id: integer("category_id")
     .notNull()
     .references(() => categories.id),
