@@ -39,12 +39,14 @@ export default function AddPeriod() {
             value={label}
             onChangeText={setLabel}
           ></TextInput>
-          <Button
-            title="Submit"
+          <Text
+            style={styles.submit_button}
             onPress={() => {
               add_period();
             }}
-          />
+          >
+            Submit
+          </Text>
           <Text onPress={() => router.back()} style={styles.back_button}>
             back
           </Text>
@@ -59,7 +61,8 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 40,
     borderWidth: 1,
-    marginBottom: 20,
+    paddingLeft: 10,
+    paddingRight: 10,
   },
 
   input_label: {
@@ -80,7 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    top: 150,
+    top: "25%",
   },
 
   page_header: {
@@ -91,5 +94,14 @@ const styles = StyleSheet.create({
 
   back_button: {
     color: "grey",
+  },
+
+  submit_button: {
+    marginTop: 30,
+    marginBottom: 5,
+    fontSize: 18,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 8,
   },
 });

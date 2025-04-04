@@ -1,4 +1,4 @@
-import { Button, SafeAreaView } from "react-native";
+import { Button, SafeAreaView, View } from "react-native";
 import { Text, TextInput, StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -44,13 +44,10 @@ export default function AddExpense() {
       period_id: 573,
     };
 
-    console.log(expense);
-
     try {
       const result = await drizzleDb
         .insert(schema.budget_entries)
         .values(expense);
-      console.log("Finished db request");
 
       if (result.changes > 0) router.navigate("/");
     } catch (ex) {
@@ -64,35 +61,43 @@ export default function AddExpense() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView>
-        <Text style={styles.input_label}>Label:</Text>
-        <TextInput
-          style={styles.input}
-          value={label}
-          onChangeText={setLabel}
-        ></TextInput>
-        <Text style={styles.input_label}>Category:</Text>
-        <DropDownPicker
-          open={open}
-          value={value}
-          items={items}
-          setOpen={setOpen}
-          setValue={setValue}
-          setItems={setItems}
-        />
-        <Text style={styles.input_label}>Amount:</Text>
-        <TextInput
-          style={styles.input}
-          value={amount}
-          keyboardType="numeric"
-          onChangeText={setAmount}
-        ></TextInput>
-        <Button
-          title="Submit"
-          onPress={() => {
-            submit_expense();
-          }}
-        />
+      <SafeAreaView style={styles.safe_area}>
+        <Text style={styles.page_header}>Add Expense</Text>
+        <View style={styles.input_area}>
+          <Text style={styles.input_label}>Label:</Text>
+          <TextInput
+            style={styles.input}
+            value={label}
+            onChangeText={setLabel}
+          ></TextInput>
+          <Text style={styles.input_label}>Category:</Text>
+          <DropDownPicker
+            open={open}
+            value={value}
+            items={items}
+            setOpen={setOpen}
+            setValue={setValue}
+            setItems={setItems}
+          />
+          <Text style={styles.input_label}>Amount:</Text>
+          <TextInput
+            style={styles.input}
+            value={amount}
+            keyboardType="numeric"
+            onChangeText={setAmount}
+          ></TextInput>
+          <Text
+            style={styles.submit_button}
+            onPress={() => {
+              submit_expense();
+            }}
+          >
+            Submit
+          </Text>
+          <Text onPress={() => router.back()} style={styles.back_button}>
+            back
+          </Text>
+        </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -100,13 +105,50 @@ export default function AddExpense() {
 
 const styles = StyleSheet.create({
   input: {
+    width: "100%",
     height: 40,
-    margin: 12,
     borderWidth: 1,
-    padding: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
   },
 
   input_label: {
+    width: "95%",
     padding: 10,
+  },
+
+  safe_area: {
+    width: "100%",
+    flex: 1,
+    alignItems: "center",
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+
+  input_area: {
+    width: "60%",
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    top: 150,
+  },
+
+  page_header: {
+    fontSize: 24,
+    padding: 20,
+    top: 35,
+  },
+
+  back_button: {
+    color: "grey",
+  },
+
+  submit_button: {
+    marginTop: 30,
+    marginBottom: 5,
+    fontSize: 18,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 8,
   },
 });

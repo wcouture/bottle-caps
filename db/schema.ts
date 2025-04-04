@@ -9,6 +9,7 @@ export const categories = sqliteTable("categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   limit: integer("limit").notNull(),
+  color: text("color").notNull(),
 });
 
 export const budget_entries = sqliteTable("budget_entries", {

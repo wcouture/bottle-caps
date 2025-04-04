@@ -45,6 +45,10 @@ export default function RootLayout() {
               name="add-period"
               options={{ headerShown: false }}
             ></Stack.Screen>
+            <Stack.Screen
+              name="add-category"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
           </Stack>
         </ThemeProvider>
       </SQLiteProvider>

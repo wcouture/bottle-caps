@@ -26,6 +26,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
         <data android:scheme="com.anonymous.BudgetTracker"/>
+        <data android:scheme="exp+budgettracker"/>
       </intent-filter>
     </activity>
   </application>
