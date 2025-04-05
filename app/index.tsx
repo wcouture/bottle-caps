@@ -1,6 +1,6 @@
 import { Button, StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
-import { router } from "expo-router";
+import { Link, RelativePathString, router } from "expo-router";
 import { PieChart, pieDataItem } from "react-native-gifted-charts";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
@@ -198,9 +198,11 @@ export default function Index() {
           ></PieChart>
           <View style={PieChartStyle.graph_key}>
             {pieData.map((cat_item, index) => {
+              const data_index = Math.floor(index / 2);
+              const cat_id = data[data_index].id;
               return (
                 <Text
-                  key={cat_item.text}
+                  key={index}
                   style={{
                     width: "35%",
                     backgroundColor: cat_item.color,
@@ -212,11 +214,7 @@ export default function Index() {
                     boxShadow: "1px 1px 5px 2px rgba(0,0,0,0.1)",
                   }}
                   onPress={() => {
-                    const data_index = Math.floor(index / 2);
-                    router.push({
-                      pathname: "/details",
-                      params: { id: data[data_index].id },
-                    });
+                    router.navigate(`/details?id=${cat_id}`);
                   }}
                 >
                   {cat_item.text}
@@ -225,31 +223,12 @@ export default function Index() {
             })}
           </View>
         </View>
-        <Button
-          title="Add Category"
-          onPress={() => {
-            router.push({
-              pathname: "/add-category",
-            });
-          }}
-        />
-        <Button
-          title="Add Expense"
-          onPress={() => {
-            router.push({
-              pathname: "/add-expense",
-            });
-          }}
-        />
-        <Button
-          title="Add Period"
-          onPress={() => {
-            router.push({
-              pathname: "/add-period",
-            });
-          }}
-        />
-        <Button title="Clear DB" onPress={clear_db} />
+        <Link style={PieChartStyle.nav_button} href={"/add-expense"}>
+          Add Expense
+        </Link>
+        <Link style={PieChartStyle.nav_button} href={"/settings"}>
+          Settings
+        </Link>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -289,5 +268,14 @@ const PieChartStyle = StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  nav_button: {
+    borderWidth: 1,
+    fontSize: 18,
+    padding: 10,
+    borderRadius: 5,
+    boxShadow: "1px 1px 5px 1px rgba(0,0,0,0.2)",
+    margin: 10,
   },
 });

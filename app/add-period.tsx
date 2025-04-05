@@ -6,11 +6,12 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
-import { router } from "expo-router";
+import { Link, router, useNavigation } from "expo-router";
 
 export default function AddPeriod() {
   const [label, setLabel] = useState("");
 
+  const navigation = useNavigation();
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
 
@@ -47,9 +48,9 @@ export default function AddPeriod() {
           >
             Submit
           </Text>
-          <Text onPress={() => router.back()} style={styles.back_button}>
+          <Link href="/" style={styles.back_button}>
             back
-          </Text>
+          </Link>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>

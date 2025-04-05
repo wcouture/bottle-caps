@@ -49,7 +49,7 @@ export default function AddExpense() {
         .insert(schema.budget_entries)
         .values(expense);
 
-      if (result.changes > 0) router.navigate("/");
+      if (result.changes > 0) router.back();
     } catch (ex) {
       console.log(ex);
     }

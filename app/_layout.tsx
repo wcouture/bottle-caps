@@ -49,6 +49,10 @@ export default function RootLayout() {
               name="add-category"
               options={{ headerShown: false }}
             ></Stack.Screen>
+            <Stack.Screen
+              name="settings"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
           </Stack>
         </ThemeProvider>
       </SQLiteProvider>
