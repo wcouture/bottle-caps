@@ -22,5 +22,15 @@ export const budget_entries = sqliteTable("budget_entries", {
   period_id: integer("period_id").references(() => periods.id),
 });
 
+export const previous_entries = sqliteTable("previous_entries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  value: integer("value").notNull(),
+  label: text("label").notNull(),
+  category_id: integer("category_id")
+    .notNull()
+    .references(() => categories.id),
+  period_id: integer("period_id").references(() => periods.id),
+});
+
 export type BudgetEntry = typeof budget_entries.$inferSelect;
 export type Category = typeof categories.$inferSelect;

@@ -7,6 +7,7 @@ import { SQLiteRunResult, useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
 import { router } from "expo-router";
+import { max } from "drizzle-orm";
 
 export default function AddExpense() {
   const [label, setLabel] = useState("");
@@ -36,12 +37,20 @@ export default function AddExpense() {
 
   const submit_expense = async () => {
     let cat_id = parseInt(value ?? "");
+    const current_period = await drizzleDb
+      .select({ id: max(schema.periods.id) })
+      .from(schema.periods);
+    const period_id = current_period[0].id;
+
+    const entries = await drizzleDb.query.budget_entries.findMany();
+    const prev_entries = await drizzleDb.query.previous_entries.findMany();
+
     const expense = {
-      id: Math.round(Math.random() * 1000),
+      id: entries.length + prev_entries.length + 1,
       value: parseInt(amount),
       label: label,
       category_id: cat_id,
-      period_id: 573,
+      period_id: period_id,
     };
 
     try {
@@ -49,7 +58,9 @@ export default function AddExpense() {
         .insert(schema.budget_entries)
         .values(expense);
 
-      if (result.changes > 0) router.back();
+      if (result.changes > 0) {
+        router.back();
+      }
     } catch (ex) {
       console.log(ex);
     }
@@ -94,10 +105,10 @@ export default function AddExpense() {
           >
             Submit
           </Text>
-          <Text onPress={() => router.back()} style={styles.back_button}>
-            back
-          </Text>
         </View>
+        <Text onPress={() => router.back()} style={styles.back_button}>
+          back
+        </Text>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -141,6 +152,7 @@ const styles = StyleSheet.create({
 
   back_button: {
     color: "grey",
+    top: -50,
   },
 
   submit_button: {

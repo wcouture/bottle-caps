@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
+import { desc } from "drizzle-orm";
 import * as schema from "@/db/schema";
 import { Link, router, useNavigation } from "expo-router";
 
@@ -16,16 +17,33 @@ export default function AddPeriod() {
   const drizzleDb = drizzle(db, { schema });
 
   const add_period = async () => {
+    const periods = await drizzleDb.query.periods.findMany();
     const period = {
-      id: Math.round(Math.random() * 1000),
+      id: periods.length + 1,
       label: label,
     };
 
-    console.log(period);
-
     const result = await drizzleDb.insert(schema.periods).values(period);
 
-    if (result.changes > 0) router.navigate("/");
+    if (result.changes > 0) {
+      try {
+        // New period made
+
+        // Retrieve all current budget entries
+        const entries = await drizzleDb.query.budget_entries.findMany();
+
+        if (false && entries.length > 0) {
+          // Insert into prev_entries table
+          await drizzleDb.insert(schema.previous_entries).values(entries);
+
+          // Delete all current budget entries
+          await drizzleDb.delete(schema.budget_entries);
+        }
+        router.navigate("/");
+      } catch (e) {
+        console.log(e);
+      }
+    }
   };
 
   return (
@@ -48,10 +66,10 @@ export default function AddPeriod() {
           >
             Submit
           </Text>
-          <Link href="/" style={styles.back_button}>
-            back
-          </Link>
         </View>
+        <Text onPress={() => router.back()} style={styles.back_button}>
+          back
+        </Text>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -94,6 +112,8 @@ const styles = StyleSheet.create({
   },
 
   back_button: {
+    top: -50,
+    fontStyle: "italic",
     color: "grey",
   },
 

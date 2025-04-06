@@ -32,8 +32,9 @@ export default function AddCategory() {
   };
 
   const submit_category = async () => {
+    const categories = await drizzleDb.query.categories.findMany();
     const cat_item = {
-      id: Math.floor(Math.random() * 10000),
+      id: categories.length + 1,
       name: category_name,
       limit: parseInt(category_limit),
       color: category_color,
@@ -119,11 +120,15 @@ export default function AddCategory() {
           >
             Submit
           </Text>
-          <Text onPress={() => router.back()} style={styles.back_button}>
-            back
-          </Text>
         </View>
-        <Modal visible={showModal} animationType="slide">
+        <Text onPress={() => router.back()} style={styles.back_button}>
+          back
+        </Text>
+        <Modal
+          presentationStyle="pageSheet"
+          visible={showModal}
+          animationType="slide"
+        >
           <ColorPicker
             style={{
               width: "70%",
@@ -193,6 +198,8 @@ const styles = StyleSheet.create({
 
   back_button: {
     color: "grey",
+    top: -50,
+    fontStyle: "italic",
   },
 
   color_button: {

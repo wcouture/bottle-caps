@@ -1,11 +1,11 @@
-import { Button, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
-import { Link, RelativePathString, router } from "expo-router";
+import { Link, router } from "expo-router";
 import { PieChart, pieDataItem } from "react-native-gifted-charts";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 interface CategoryItem {
@@ -93,30 +93,43 @@ function generateUsedColor(color: string): string {
 }
 
 export default function Index() {
-  const [budgetUsed, setBudget] = useState(1500);
+  const [budgetUsed, setBudgetUsed] = useState(0);
+  const [budgetTotal, setBudgetTotal] = useState(0);
 
   // Used to supply and update piechart
   const [pieData, setPieData] = useState<pieDataItem[]>([]);
   // Used to store retrieved data from database
-  const [data, setData] = useState<CategoryItem[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryItem[]>([]);
+
+  const [currentPeriod, setCurrentPeriod] = useState("No Current Period");
+  const [currentPeriodID, setCurrentPeriodID] = useState(-1);
 
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
 
-  const clear_db = async () => {
-    const data = await drizzleDb.delete(schema.categories);
-    await drizzleDb.delete(schema.budget_entries);
-    await drizzleDb.delete(schema.periods);
-    setData([]);
-    setPieData;
+  const load_current_period = async () => {
+    const periods = await drizzleDb
+      .select()
+      .from(schema.periods)
+      .orderBy(desc(schema.periods.id));
+
+    const period = periods[0];
+    const period_id = period?.id;
+    const period_label = period?.label;
+
+    setCurrentPeriod(period_label ?? "No Current Period");
+    setCurrentPeriodID(period_id ?? -1);
   };
 
   const load_data = async () => {
     const data = await drizzleDb.query.categories.findMany();
     const category_data: CategoryItem[] = [];
+    const budget = { total: 0, used: 0 };
     for (let i = 0; i < data.length; i++) {
       const item = data[i];
       const cat_id = item.id;
+
+      budget.total += item.limit;
 
       const cat_item: CategoryItem = {
         id: cat_id,
@@ -128,38 +141,46 @@ export default function Index() {
       };
 
       category_data.push(cat_item);
-      setData(category_data);
+      setCategoryData(category_data);
 
-      try {
-        const budget_entries = await drizzleDb
-          .select()
-          .from(schema.budget_entries)
-          .where(eq(schema.budget_entries.category_id, cat_id));
+      var budget_entries = await drizzleDb
+        .select()
+        .from(schema.budget_entries)
+        .where(
+          and(
+            eq(schema.budget_entries.category_id, cat_id),
+            eq(schema.budget_entries.period_id, currentPeriodID)
+          )
+        );
 
-        for (let i = 0; i < budget_entries.length; i++) {
-          const entry = budget_entries[i];
-          cat_item.used += entry.value;
-          cat_item.available -= entry.value;
-        }
-      } catch (e) {
-        console.log(e);
+      for (let i = 0; i < budget_entries.length; i++) {
+        const entry = budget_entries[i];
+        cat_item.used += entry.value;
+        cat_item.available -= entry.value;
       }
+
+      budget.used += cat_item.used;
     }
 
+    setBudgetTotal(budget.total);
+    setBudgetUsed(budget.used);
+  };
+
+  const generate_chart_data = async () => {
     const chartData: pieDataItem[] = [];
 
-    for (let i = 0; i < category_data.length; i++) {
+    for (let i = 0; i < categoryData.length; i++) {
       let item = {
-        value: category_data[i].used,
-        text: category_data[i].name + "(-)",
-        color: category_data[i].used_color,
+        value: categoryData[i].used,
+        text: categoryData[i].name,
+        color: categoryData[i].used_color,
       };
       chartData.push(item);
 
       let item2 = {
-        value: category_data[i].available,
-        text: category_data[i].name + "(+)",
-        color: category_data[i].color,
+        value: categoryData[i].available,
+        text: categoryData[i].name,
+        color: categoryData[i].color,
       };
       chartData.push(item2);
     }
@@ -167,24 +188,57 @@ export default function Index() {
   };
 
   useEffect(() => {
-    load_data();
+    load_current_period();
   }, []);
+
+  useEffect(() => {
+    if (currentPeriodID <= 0) return;
+
+    load_data();
+  }, [currentPeriodID]);
+
+  useEffect(() => {
+    // console.log("Budget: " + budgetUsed + "/" + budgetTotal);
+    // console.log("Period: " + currentPeriod + " - " + currentPeriodID);
+    generate_chart_data();
+  }, [budgetTotal, budgetUsed, currentPeriod, currentPeriodID]);
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={PieChartStyle.safe_area}>
-        <Text style={PieChartStyle.page_header}>Available Budget</Text>
-        <Text style={PieChartStyle.available_label}>$ {budgetUsed} / 2500</Text>
+        <View style={PieChartStyle.period_label}>
+          <Text style={PieChartStyle.period_inner_text}>{currentPeriod}</Text>
+        </View>
         <View style={PieChartStyle.piechart}>
           <PieChart
             donut
-            strokeWidth={2}
+            centerLabelComponent={() => {
+              return (
+                <View
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignContent: "center",
+                  }}
+                >
+                  <View style={PieChartStyle.available_label}>
+                    <Text style={PieChartStyle.used_label}>$ {budgetUsed}</Text>
+                    <Text style={PieChartStyle.slash_label}>/</Text>
+                    <Text style={PieChartStyle.total_label}>{budgetTotal}</Text>
+                  </View>
+                </View>
+              );
+            }}
+            innerRadius={95}
+            strokeWidth={0}
             strokeColor="black"
-            innerCircleBorderWidth={2}
+            innerCircleBorderWidth={0}
             innerCircleBorderColor={"black"}
             showValuesAsLabels={true}
             textSize={14}
-            textBackgroundRadius={22}
+            textBackgroundRadius={0}
             textColor="black"
             labelsPosition="outward"
             data={pieData}
@@ -192,24 +246,31 @@ export default function Index() {
               const data_index = Math.floor(index / 2);
               router.push({
                 pathname: "/details",
-                params: { id: data[data_index].id },
+                params: { id: categoryData[data_index].id },
               });
             }}
           ></PieChart>
           <View style={PieChartStyle.graph_key}>
             {pieData.map((cat_item, index) => {
+              if (index % 2 == 0) {
+                return;
+              }
               const data_index = Math.floor(index / 2);
-              const cat_id = data[data_index].id;
+              const cat_id = categoryData[data_index].id;
               return (
                 <Text
                   key={index}
                   style={{
-                    width: "35%",
-                    backgroundColor: cat_item.color,
+                    width: "40%",
+                    borderRightColor: pieData[index - 1].color,
+                    borderBottomColor: pieData[index - 1].color,
+                    borderColor: cat_item.color,
+                    backgroundColor: "white",
+                    borderWidth: 3,
                     textAlign: "center",
-                    height: 25,
-                    color: "white",
-                    fontWeight: 800,
+                    height: 30,
+                    color: "#333",
+                    fontWeight: 400,
                     padding: 5,
                     boxShadow: "1px 1px 5px 2px rgba(0,0,0,0.1)",
                   }}
@@ -223,7 +284,11 @@ export default function Index() {
             })}
           </View>
         </View>
-        <Link style={PieChartStyle.nav_button} href={"/add-expense"}>
+        <Link
+          onPressIn={() => {}}
+          style={PieChartStyle.nav_button}
+          href={"/add-expense"}
+        >
           Add Expense
         </Link>
         <Link style={PieChartStyle.nav_button} href={"/settings"}>
@@ -236,10 +301,19 @@ export default function Index() {
 
 const PieChartStyle = StyleSheet.create({
   safe_area: {
+    backgroundColor: "white",
     flex: 1,
-    justifyContent: "flex-start",
+    justifyContent: "center",
     alignItems: "center",
     padding: 50,
+  },
+
+  period_label: {
+    top: -50,
+  },
+
+  period_inner_text: {
+    fontSize: 18,
   },
 
   piechart: {
@@ -254,17 +328,20 @@ const PieChartStyle = StyleSheet.create({
   },
 
   available_label: {
-    paddingTop: 20,
-    paddingBottom: 50,
-    fontSize: 16,
+    fontSize: 25,
     fontWeight: 300,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
   },
 
   graph_key: {
+    top: 50,
     padding: 10,
     display: "flex",
     flexDirection: "row",
-    rowGap: 10,
+    gap: 10,
     flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "center",
@@ -277,5 +354,23 @@ const PieChartStyle = StyleSheet.create({
     borderRadius: 5,
     boxShadow: "1px 1px 5px 1px rgba(0,0,0,0.2)",
     margin: 10,
+  },
+
+  used_label: {
+    fontSize: 22,
+    top: 10,
+    right: -10,
+  },
+
+  slash_label: {
+    fontSize: 45,
+    fontWeight: 200,
+    color: "#AAA",
+  },
+
+  total_label: {
+    fontSize: 25,
+    top: 20,
+    left: -10,
   },
 });

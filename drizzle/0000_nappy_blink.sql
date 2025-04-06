@@ -19,3 +19,13 @@ CREATE TABLE `periods` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`label` text NOT NULL
 );
+--> statement-breakpoint
+CREATE TABLE `previous_entries` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`value` integer NOT NULL,
+	`label` text NOT NULL,
+	`category_id` integer NOT NULL,
+	`period_id` integer,
+	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`period_id`) REFERENCES `periods`(`id`) ON UPDATE no action ON DELETE no action
+);
