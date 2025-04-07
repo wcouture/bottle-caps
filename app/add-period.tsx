@@ -39,7 +39,8 @@ export default function AddPeriod() {
           // Delete all current budget entries
           await drizzleDb.delete(schema.budget_entries);
         }
-        router.navigate("/");
+        router.dismissAll();
+        router.replace("/");
       } catch (e) {
         console.log(e);
       }

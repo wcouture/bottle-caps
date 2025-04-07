@@ -34,3 +34,4 @@ export const previous_entries = sqliteTable("previous_entries", {
 
 export type BudgetEntry = typeof budget_entries.$inferSelect;
 export type Category = typeof categories.$inferSelect;
+export type Period = typeof periods.$inferSelect;

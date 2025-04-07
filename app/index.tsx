@@ -23,7 +23,7 @@ interface Color {
   b: number;
 }
 
-function generateUsedColor(color: string): string {
+function generateAvailableColor(color: string): string {
   const saturation_scale = 5;
 
   var output = "#";
@@ -113,6 +113,10 @@ export default function Index() {
       .from(schema.periods)
       .orderBy(desc(schema.periods.id));
 
+    if (periods.length <= 0) {
+      router.push("/add-period");
+    }
+
     const period = periods[0];
     const period_id = period?.id;
     const period_label = period?.label;
@@ -123,6 +127,10 @@ export default function Index() {
 
   const load_data = async () => {
     const data = await drizzleDb.query.categories.findMany();
+    if (data.length <= 0) {
+      router.push("/add-category");
+    }
+
     const category_data: CategoryItem[] = [];
     const budget = { total: 0, used: 0 };
     for (let i = 0; i < data.length; i++) {
@@ -136,8 +144,8 @@ export default function Index() {
         used: 0,
         available: item.limit,
         name: item.name,
-        color: item.color,
-        used_color: generateUsedColor(item.color),
+        color: generateAvailableColor(item.color),
+        used_color: item.color,
       };
 
       category_data.push(cat_item);
@@ -202,6 +210,10 @@ export default function Index() {
     // console.log("Period: " + currentPeriod + " - " + currentPeriodID);
     generate_chart_data();
   }, [budgetTotal, budgetUsed, currentPeriod, currentPeriodID]);
+
+  setInterval(() => {
+    load_current_period();
+  }, 1000);
 
   return (
     <SafeAreaProvider>
@@ -313,7 +325,8 @@ const PieChartStyle = StyleSheet.create({
   },
 
   period_inner_text: {
-    fontSize: 18,
+    fontSize: 32,
+    fontWeight: 300,
   },
 
   piechart: {
@@ -323,7 +336,7 @@ const PieChartStyle = StyleSheet.create({
 
   page_header: {
     textDecorationLine: "underline",
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 300,
   },
 

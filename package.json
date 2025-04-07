@@ -21,6 +21,7 @@
     "babel-plugin-inline-import": "^3.0.0",
     "bootstrap": "^5.3.3",
     "drizzle-orm": "^0.41.0",
+    "eas": "^0.1.0",
     "eas-cli": "^16.1.0",
     "expo": "~52.0.39",
     "expo-blur": "~14.0.3",

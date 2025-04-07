@@ -59,7 +59,8 @@ export default function AddExpense() {
         .values(expense);
 
       if (result.changes > 0) {
-        router.back();
+        router.dismissAll();
+        router.replace("/");
       }
     } catch (ex) {
       console.log(ex);
@@ -151,6 +152,7 @@ const styles = StyleSheet.create({
   },
 
   back_button: {
+    fontStyle: "italic",
     color: "grey",
     top: -50,
   },

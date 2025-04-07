@@ -58,7 +58,10 @@ export default function AddCategory() {
       const result = await drizzleDb.insert(schema.categories).values(cat_item);
 
       // If insertion was successful, return to home screen
-      if (result.changes > 0) router.navigate("/");
+      if (result.changes > 0) {
+        router.dismissAll();
+        router.replace("/");
+      }
     } catch (e) {
       console.log(e);
     }

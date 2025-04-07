@@ -1,7 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
-import { categories, Category, budget_entries, BudgetEntry } from "@/db/schema";
+import {
+  categories,
+  Category,
+  budget_entries,
+  BudgetEntry,
+  Period,
+} from "@/db/schema";
 import * as schema from "@/db/schema";
 import { Text, View, StyleSheet, Button, ScrollView } from "react-native";
 import { useEffect, useState } from "react";
@@ -9,16 +15,24 @@ import { desc, asc, eq, and } from "drizzle-orm";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { BarChart, LineChart, lineDataItem } from "react-native-gifted-charts";
 
+interface BarItem {
+  value: number;
+  label: string;
+  id: number;
+}
+
 export default function Details() {
   const [entries, setEntries] = useState<BudgetEntry[]>([]);
-  const [allEntries, setAllEntries] = useState<BudgetEntry[]>([]);
-  const [chartData, setChartData] = useState<[]>([]);
+  const [chartData, setChartData] = useState<BarItem[]>([]);
 
   const { id } = useLocalSearchParams<{ id?: string }>();
   const category_id = parseInt(id ?? "0");
 
   const [categoryData, setCategoryData] = useState<Category[]>([]);
   const [category, setCategory] = useState<Category>();
+
+  const [budgetUsed, setBudgetUsed] = useState<number>(0);
+  const [budgetLimit, setBudgetLimit] = useState<number>(0);
 
   const [currentPeriod, setCurrentPeriod] = useState("No Current Period");
   const [currentPeriodID, setCurrentPeriodID] = useState(-1);
@@ -57,7 +71,7 @@ export default function Details() {
     setEntries(entries);
   };
 
-  const customLabel = (label: string) => {
+  const barTopLabel = (label: string) => {
     return (
       <View>
         <Text style={{ textAlign: "right", fontSize: 10 }}>{label}</Text>
@@ -65,13 +79,45 @@ export default function Details() {
     );
   };
 
-  const generateChartData = async () => {};
-  const loadAllEntries = async () => {
-    const all_entries = await drizzleDb
-      .select()
-      .from(schema.budget_entries)
-      .orderBy(asc(schema.budget_entries.period_id));
-    setAllEntries(all_entries);
+  const loadPreviousPeriods = async () => {
+    const barData = [];
+
+    const prev_periods = await drizzleDb.select().from(schema.periods).limit(6);
+    for (let i = 0; i < prev_periods.length; i++) {
+      const period = prev_periods[i];
+      const bar_item = {
+        value: 0,
+        label: period.label,
+        id: period.id,
+        topLabelComponent: () => {},
+      };
+
+      const entries = await drizzleDb
+        .select()
+        .from(schema.budget_entries)
+        .where(
+          and(
+            eq(schema.budget_entries.category_id, category?.id ?? -1),
+            eq(schema.budget_entries.period_id, period.id)
+          )
+        );
+
+      for (let j = 0; j < entries.length; j++) {
+        bar_item.value += entries[j].value;
+      }
+
+      bar_item.topLabelComponent = () => {
+        return barTopLabel(bar_item.value.toString());
+      };
+
+      barData.push(bar_item);
+
+      if (bar_item.id == currentPeriodID) {
+        setBudgetUsed(bar_item.value);
+      }
+    }
+
+    setChartData(barData);
   };
 
   useEffect(() => {
@@ -80,16 +126,18 @@ export default function Details() {
 
   useEffect(() => {
     load();
-    loadAllEntries();
   }, [currentPeriodID]);
 
   useEffect(() => {
-    setCategory(categoryData.at(0));
-  }, [categoryData]);
+    loadPreviousPeriods();
+  }, [category]);
 
   useEffect(() => {
-    generateChartData();
-  }, [entries]);
+    setCategory(categoryData.at(0));
+    setBudgetLimit(categoryData.at(0)?.limit ?? 0);
+  }, [categoryData]);
+
+  useEffect(() => {}, [entries]);
 
   return (
     <SafeAreaProvider>
@@ -101,12 +149,33 @@ export default function Details() {
       >
         <Text style={styles.category_header}>{category?.name}</Text>
         <Text style={styles.period_label}>{currentPeriod}</Text>
+        <View style={styles.bar_chart_view}>
+          <BarChart
+            rotateLabel
+            maxValue={(category?.limit ?? 0) * 1.5}
+            barBorderRadius={4}
+            xAxisThickness={0}
+            yAxisColor={"grey"}
+            noOfSections={4}
+            onPress={(item: BarItem) => {
+              setCurrentPeriodID(item.id);
+              setCurrentPeriod(item.label);
+            }}
+            frontColor={category?.color}
+            data={chartData}
+          />
+        </View>
+        <Text style={styles.expenses_header}>Current Expenses:</Text>
+        <Text style={styles.budget_status}>
+          ${budgetUsed} / {budgetLimit}
+        </Text>
         <ScrollView>
-          <BarChart rotateLabel stackData={chartData} />
           {entries.map((item) => (
-            <Text style={styles.budget_entry} key={item.id}>
-              {item.label} - ${item.value}
-            </Text>
+            <View style={styles.budget_entry} key={item.id}>
+              <Text style={styles.entry_value}>${item.value}</Text>
+              <Text>-</Text>
+              <Text style={styles.entry_label}>{item.label}</Text>
+            </View>
           ))}
         </ScrollView>
         <Text style={styles.back_button} onPress={() => router.back()}>
@@ -122,6 +191,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
+    width: "100%",
+  },
+
+  bar_chart_view: {
+    paddingBottom: 50,
   },
 
   category_header: {
@@ -133,15 +207,44 @@ const styles = StyleSheet.create({
     borderBottomColor: "grey",
   },
 
+  expenses_header: {
+    textDecorationLine: "underline",
+    fontSize: 22,
+  },
+
+  budget_status: {
+    color: "grey",
+    fontSize: 18,
+    paddingBottom: 10,
+  },
+
   budget_entry: {
-    borderColor: "black",
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 15,
-    marginTop: 20,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    width: "100%",
+    borderColor: "#BBB",
+    borderBottomWidth: 1,
+    borderTopWidth: 0,
+    padding: 5,
+  },
+
+  entry_value: {
+    width: "20%",
+    textAlign: "center",
+    fontSize: 18,
+  },
+
+  entry_label: {
+    width: "35%",
+    marginLeft: 15,
+    fontSize: 18,
   },
 
   back_button: {
+    fontStyle: "italic",
     color: "grey",
     top: -50,
   },
@@ -149,5 +252,6 @@ const styles = StyleSheet.create({
   period_label: {
     top: -50,
     color: "grey",
+    fontSize: 18,
   },
 });
