@@ -152,6 +152,7 @@ export default function Details() {
         <View style={styles.bar_chart_view}>
           <BarChart
             rotateLabel
+            height={100}
             maxValue={(category?.limit ?? 0) * 1.5}
             barBorderRadius={4}
             xAxisThickness={0}
@@ -192,6 +193,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     width: "100%",
+    backgroundColor: "white",
   },
 
   bar_chart_view: {
@@ -246,7 +248,6 @@ const styles = StyleSheet.create({
   back_button: {
     fontStyle: "italic",
     color: "grey",
-    top: -50,
   },
 
   period_label: {

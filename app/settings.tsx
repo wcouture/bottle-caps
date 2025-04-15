@@ -41,9 +41,10 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
   page_view: {
-    width: "85%",
+    width: "100%",
     marginLeft: "auto",
     marginRight: "auto",
+    backgroundColor: "white",
   },
   page_header: {
     fontSize: 24,

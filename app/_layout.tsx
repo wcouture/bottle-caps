@@ -53,6 +53,10 @@ export default function RootLayout() {
               name="settings"
               options={{ headerShown: false }}
             ></Stack.Screen>
+            <Stack.Screen
+              name="intro"
+              options={{ headerShown: false }}
+            ></Stack.Screen>
           </Stack>
         </ThemeProvider>
       </SQLiteProvider>

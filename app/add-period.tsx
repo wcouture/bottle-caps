@@ -26,24 +26,13 @@ export default function AddPeriod() {
     const result = await drizzleDb.insert(schema.periods).values(period);
 
     if (result.changes > 0) {
-      try {
-        // New period made
-
-        // Retrieve all current budget entries
-        const entries = await drizzleDb.query.budget_entries.findMany();
-
-        if (false && entries.length > 0) {
-          // Insert into prev_entries table
-          await drizzleDb.insert(schema.previous_entries).values(entries);
-
-          // Delete all current budget entries
-          await drizzleDb.delete(schema.budget_entries);
-        }
-        router.dismissAll();
-        router.replace("/");
-      } catch (e) {
-        console.log(e);
+      const cats = await drizzleDb.query.categories.findMany();
+      if (cats.length <= 0) {
+        router.replace("/add-category");
+        return;
       }
+      router.dismissAll();
+      router.replace("/");
     }
   };
 
@@ -68,7 +57,14 @@ export default function AddPeriod() {
             Submit
           </Text>
         </View>
-        <Text onPress={() => router.back()} style={styles.back_button}>
+        <Text
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            }
+          }}
+          style={styles.back_button}
+        >
           back
         </Text>
       </SafeAreaView>
@@ -96,6 +92,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: "auto",
     marginRight: "auto",
+    backgroundColor: "white",
   },
 
   input_area: {

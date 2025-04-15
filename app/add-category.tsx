@@ -59,7 +59,9 @@ export default function AddCategory() {
 
       // If insertion was successful, return to home screen
       if (result.changes > 0) {
-        router.dismissAll();
+        if (router.canDismiss()) {
+          router.dismissAll();
+        }
         router.replace("/");
       }
     } catch (e) {
@@ -183,6 +185,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginLeft: "auto",
     marginRight: "auto",
+    backgroundColor: "white",
   },
 
   input_area: {

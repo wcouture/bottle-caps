@@ -114,7 +114,7 @@ export default function Index() {
       .orderBy(desc(schema.periods.id));
 
     if (periods.length <= 0) {
-      router.push("/add-period");
+      router.replace("/intro");
     }
 
     const period = periods[0];
@@ -210,10 +210,6 @@ export default function Index() {
     // console.log("Period: " + currentPeriod + " - " + currentPeriodID);
     generate_chart_data();
   }, [budgetTotal, budgetUsed, currentPeriod, currentPeriodID]);
-
-  setInterval(() => {
-    load_current_period();
-  }, 1000);
 
   return (
     <SafeAreaProvider>

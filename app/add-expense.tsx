@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: "auto",
     marginRight: "auto",
+    backgroundColor: "white",
   },
 
   input_area: {
