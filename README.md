@@ -15,9 +15,8 @@ Easily track and manage your budget through an easy to understand interface. Cre
 
 ## Framework and Dependencies
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
 - **Package Manager**: [NPM](https://www.npmjs.com/)
+- **Build Platform**: [Expo](https://expo.dev)
 - **Framework**: [React Native](https://reactnative.dev/)
 - **Database**: [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) <i>&</i> [Drizzle ORM](https://orm.drizzle.team/docs/overview)
 - **Charts**: [Gifted Charts](https://gifted-charts.web.app/)
