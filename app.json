@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "bottlecaps",
+    "name": "bottle caps",
     "slug": "BudgetTracker",
     "version": "1.2.0",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.BudgetTracker",
+      "bundleIdentifier": "com.anonymous.bottlecaps",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
@@ -21,7 +21,8 @@
               "NSExceptionAllowsInsecureHTTPLoads": true
             }
           }
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
